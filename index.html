@@ -106,7 +106,7 @@
   .order-btn { width: 100%; background: var(--gold); border: none; border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700; color: #0F0E0C; cursor: pointer; }
   .vol-badge { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-  /* Admin modal */
+  /* Admin panel */
   .admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 400; display: none; align-items: flex-end; }
   .admin-modal.open { display: flex; }
   .admin-sheet { background: var(--bg2); border-radius: 24px 24px 0 0; width: 100%; max-height: 92vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 16px); }
@@ -133,13 +133,6 @@
   .mini-btn svg { width: 15px; height: 15px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; }
   .mini-btn.danger svg { stroke: var(--danger); }
   .add-new-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--bg3); border: 1.5px dashed var(--border); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; color: var(--gold); cursor: pointer; margin-top: 14px; }
-  .admin-tabs { display: flex; gap: 8px; padding: 14px 20px 0; }
-  .admin-tab { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--bg3); border: 0.5px solid var(--border); color: var(--text-muted); cursor: pointer; }
-  .admin-tab.active { background: var(--gold); border-color: var(--gold); color: #0F0E0C; }
-  .pass-wrap { padding: 40px 24px; text-align: center; }
-  .pass-icon { font-size: 40px; margin-bottom: 16px; }
-  .pass-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
-  .pass-error { color: var(--danger); font-size: 13px; margin-top: -6px; margin-bottom: 10px; display: none; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 0.5px solid var(--gold); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
   .toast.show { opacity: 1; }
 </style>
@@ -211,24 +204,6 @@
   </div>
 </div>
 
-<!-- Admin password gate -->
-<div class="admin-modal" id="admin-gate" onclick="closeAdminGate(event)">
-  <div class="admin-sheet">
-    <div class="admin-header">
-      <div class="admin-title">Вхід в адмін-панель</div>
-      <div class="icon-btn" style="position:static" onclick="closeAdminGate()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </div>
-    </div>
-    <div class="pass-wrap">
-      <div class="pass-icon">🔒</div>
-      <input class="field-input" type="password" id="admin-pass-input" placeholder="Введіть пароль" style="text-align:center" />
-      <div class="pass-error" id="pass-error">Невірний пароль</div>
-      <button class="admin-save-btn" onclick="checkAdminPassword()">Увійти</button>
-    </div>
-  </div>
-</div>
-
 <!-- Admin panel -->
 <div class="admin-modal" id="admin-panel" onclick="closeAdminPanelOverlay(event)">
   <div class="admin-sheet" id="admin-panel-inner">
@@ -294,10 +269,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_PASSWORD_KEY = 'admin_password';
+const MY_TELEGRAM_ID = 6973286871;
 const PRODUCTS_KEY = 'products_list';
-let ADMIN_PASS = null;
-let isAdminUnlocked = false;
 
 let PRODUCTS = [];
 const CATEGORIES = ['Всі', 'Жіночі', 'Чоловічі'];
@@ -341,15 +314,6 @@ async function saveProducts() {
     await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
   } catch (e) {
     showToast('Помилка збереження. Спробуйте ще раз.');
-  }
-}
-
-async function loadAdminPassword() {
-  try {
-    const result = await window.storage.get(ADMIN_PASSWORD_KEY, true);
-    ADMIN_PASS = result.value;
-  } catch (e) {
-    ADMIN_PASS = null;
   }
 }
 
@@ -484,69 +448,33 @@ function placeOrder() {
     const p = PRODUCTS.find(x => x.id === id);
     return p ? sum + p.price * cart[id] : sum;
   }, 0);
+  
   const text = `Привіт! Хочу зробити замовлення в firma.ch Parfum:\n\n${items}\n\n💰 Разом: ${total.toLocaleString('uk')} ₴`;
-  const url = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
+  const url = `tg://user?id=${MY_TELEGRAM_ID}&text=${encodeURIComponent(text)}`;
+  
   const tg = window.Telegram?.WebApp;
-  if (tg) { tg.openTelegramLink(url); } else { window.open(url, '_blank'); }
+  if (tg) { 
+    tg.openTelegramLink(url); 
+  } else { 
+    window.open(`https://t.me/user?id=${MY_TELEGRAM_ID}`, '_blank'); 
+  }
+  
   cart = {};
   updateCartBadge();
   closeCart();
 }
 
 /* ===== ADMIN ===== */
-const ADMIN_ID = "6973286871";
 
-let tgUserId = null;
+function openAdminGate() {
+  const tg = window.Telegram?.WebApp;
+  const userId = tg?.initDataUnsafe?.user?.id;
 
-if (window.Telegram?.WebApp) {
-  tgUserId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
-}
-async function openAdminGate() {
-  async function openAdminGate() {
-  const isAdmin = String(tgUserId) === ADMIN_ID;
-
-  if (!isAdmin) {
-    showToast('Нема доступу');
-    return;
-  }
-
-  document.getElementById('admin-panel').classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  renderAdminList();
-}
-
-function closeAdminGate() {
-  document.getElementById('admin-gate').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-async function checkAdminPassword() {
-  const val = document.getElementById('admin-pass-input').value.trim();
-  if (!val) return;
-  if (!ADMIN_PASS) {
-    if (val.length < 3) {
-      document.getElementById('pass-error').textContent = 'Пароль має містити мінімум 3 символи';
-      document.getElementById('pass-error').style.display = 'block';
-      return;
-    }
-    ADMIN_PASS = val;
-    try { await window.storage.set(ADMIN_PASSWORD_KEY, val, true); } catch(e) {}
-    showToast('Пароль створено');
-    unlockAdmin();
+  if (userId && Number(userId) === MY_TELEGRAM_ID) {
+    openAdminPanel();
   } else {
-    if (val === ADMIN_PASS) {
-      unlockAdmin();
-    } else {
-      document.getElementById('pass-error').style.display = 'block';
-    }
+    showToast('Доступ обмежено. Ви не є адміністратором.');
   }
-}
-
-function unlockAdmin() {
-  isAdminUnlocked = true;
-  closeAdminGate({target: document.getElementById('admin-gate')});
-  openAdminPanel();
 }
 
 function openAdminPanel() {
@@ -681,8 +609,8 @@ async function saveProductForm() {
 }
 
 /* ===== INIT ===== */
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.expand(); tg.setHeaderColor('#0F0E0C'); tg.setBackgroundColor('#0F0E0C'); }
+const tgApp = window.Telegram?.WebApp;
+if (tgApp) { tgApp.expand(); tgApp.setHeaderColor('#0F0E0C'); tgApp.setBackgroundColor('#0F0E0C'); }
 
 renderCats();
 loadProducts();
