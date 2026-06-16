@@ -312,9 +312,37 @@ async function loadProducts() {
 
 async function saveProducts() {
   try {
+    // 1. Спочатку зберігаємо локально, щоб інтерфейс оновився
     await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
+    
+    // 2. Готуємо дані безпеки Telegram для Cloudflare
+    const initData = window.Telegram?.WebApp?.initData || "";
+    
+    // 3. Відправляємо запит у твою хмарну базу Cloudflare KV
+    const response = await fetch(`${CLOUDFLARE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: initData,
+        action: 'save_products',
+        products: PRODUCTS
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Сервер повернув помилку');
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      showToast('Товари успішно синхронізовано з хмарою!');
+    } else {
+      showToast('Помилка синхронізації: ' + (result.error || 'невідомо'));
+    }
+
   } catch (e) {
-    showToast('Помилка збереження. Спробуйте ще раз.');
+    console.error(e);
+    showToast('Помилка збереження на сервер. Спробуйте ще раз.');
   }
 }
 
