@@ -300,12 +300,38 @@ const SEED_PRODUCTS = [
 
 async function loadProducts() {
   try {
+    // 1. Намагаємося завантажити найсвіжіші товари з Cloudflare KV
+    const response = await fetch(`${CLOUDFLARE_URL}?action=get_products`);
+    
+    if (response.ok) {
+      const cloudProducts = await response.json();
+      // Якщо в базі Cloudflare є товари і цей масив не порожній
+      if (cloudProducts && cloudProducts.length > 0) {
+        PRODUCTS = cloudProducts;
+        // Оновлюємо локальну пам'ять телефону свіжими даними з хмари
+        try { await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true); } catch(e) {}
+        renderCats();
+        renderGrid();
+        return; // Виходимо з функції, бо дані успішно завантажені з хмари
+      }
+    }
+  } catch (cloudflareError) {
+    console.error('Не вдалося завантажити з Cloudflare, пробуємо локальну памʼять:', cloudflareError);
+  }
+
+  // 2. Якщо хмара недоступна або порожня, беремо дані з пам'яті телефону
+  try {
     const result = await window.storage.get(PRODUCTS_KEY, true);
-    PRODUCTS = JSON.parse(result.value);
+    if (result && result.value) {
+      PRODUCTS = JSON.parse(result.value);
+    } else {
+      PRODUCTS = SEED_PRODUCTS;
+    }
   } catch (e) {
     PRODUCTS = SEED_PRODUCTS;
     try { await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true); } catch(e2) {}
   }
+
   renderCats();
   renderGrid();
 }
