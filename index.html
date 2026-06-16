@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>firma.ch Parfum</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // ==========================================
+  // НАЛАШТУВАННЯ СЕРВЕРА АВТОРИЗАЦІЇ CLOUDFLARE
+  // ==========================================
+  const CLOUDFLARE_URL = "https://mute-waterfall-78ec.msmarketua.workers.dev/";
+</script>
 <style>
   :root {
     --gold: #C9A84C;
@@ -106,7 +112,7 @@
   .order-btn { width: 100%; background: var(--gold); border: none; border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700; color: #0F0E0C; cursor: pointer; }
   .vol-badge { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-  /* Admin panel */
+  /* Admin modal */
   .admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 400; display: none; align-items: flex-end; }
   .admin-modal.open { display: flex; }
   .admin-sheet { background: var(--bg2); border-radius: 24px 24px 0 0; width: 100%; max-height: 92vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 16px); }
@@ -133,6 +139,9 @@
   .mini-btn svg { width: 15px; height: 15px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; }
   .mini-btn.danger svg { stroke: var(--danger); }
   .add-new-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--bg3); border: 1.5px dashed var(--border); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; color: var(--gold); cursor: pointer; margin-top: 14px; }
+  .admin-tabs { display: flex; gap: 8px; padding: 14px 20px 0; }
+  .admin-tab { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--bg3); border: 0.5px solid var(--border); color: var(--text-muted); cursor: pointer; }
+  .admin-tab.active { background: var(--gold); border-color: var(--gold); color: #0F0E0C; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 0.5px solid var(--gold); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
   .toast.show { opacity: 1; }
 </style>
@@ -161,7 +170,6 @@
 <div class="cats" id="cats"></div>
 <div class="grid" id="grid"><div class="loading-spin"><div class="spinner"></div></div></div>
 
-<!-- Product modal -->
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)">
   <div class="modal" id="modal-inner">
     <div class="modal-drag"></div>
@@ -184,7 +192,6 @@
   </div>
 </div>
 
-<!-- Cart modal -->
 <div class="cart-modal" id="cart-modal" onclick="closeCartModal(event)">
   <div class="cart-sheet" id="cart-inner">
     <div class="cart-header">
@@ -204,7 +211,6 @@
   </div>
 </div>
 
-<!-- Admin panel -->
 <div class="admin-modal" id="admin-panel" onclick="closeAdminPanelOverlay(event)">
   <div class="admin-sheet" id="admin-panel-inner">
     <div class="admin-header">
@@ -223,7 +229,6 @@
   </div>
 </div>
 
-<!-- Product form -->
 <div class="admin-modal" id="product-form-modal" onclick="closeProductFormOverlay(event)">
   <div class="admin-sheet">
     <div class="admin-header">
@@ -269,9 +274,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const MY_TELEGRAM_ID = 6973286871;
 const PRODUCTS_KEY = 'products_list';
-
 let PRODUCTS = [];
 const CATEGORIES = ['Всі', 'Жіночі', 'Чоловічі'];
 let activeCategory = 'Всі';
@@ -444,26 +447,14 @@ function placeOrder() {
     if (!p) return '';
     return `• ${p.brand} ${p.name} (${p.volume || ''}) x${cart[id]} — ${(p.price * cart[id]).toLocaleString('uk')} ₴`;
   }).filter(Boolean).join('\n');
-  
   const total = Object.keys(cart).reduce((sum,id) => {
     const p = PRODUCTS.find(x => x.id === id);
     return p ? sum + p.price * cart[id] : sum;
   }, 0);
-  
   const text = `Привіт! Хочу зробити замовлення в firma.ch Parfum:\n\n${items}\n\n💰 Разом: ${total.toLocaleString('uk')} ₴`;
-  
-  // Посилання на твій юзернейм, яке спрацює у всіх користувачів
   const url = `https://t.me/manager_779?text=${encodeURIComponent(text)}`;
-  
   const tg = window.Telegram?.WebApp;
-  if (tg) { 
-    // Офіційний метод Mini App для переходу за посиланнями
-    tg.openLink(url); 
-  } else { 
-    window.open(url, '_blank'); 
-  }
-  
-  // Очищення кошика після натискання
+  if (tg) { tg.openLink(url); } else { window.open(url, '_blank'); }
   cart = {};
   updateCartBadge();
   closeCart();
@@ -471,14 +462,33 @@ function placeOrder() {
 
 /* ===== ADMIN ===== */
 
-function openAdminGate() {
+async function openAdminGate() {
   const tg = window.Telegram?.WebApp;
-  const userId = tg?.initDataUnsafe?.user?.id;
+  
+  if (!tg || !tg.initData) {
+    showToast('Будь ласка, відкрийте додаток у Telegram.');
+    return;
+  }
 
-  if (userId && Number(userId) === MY_TELEGRAM_ID) {
-    openAdminPanel();
-  } else {
-    showToast('Доступ обмежено. Ви не є адміністратором.');
+  showToast('Перевірка безпеки...');
+
+  try {
+    const response = await fetch(CLOUDFLARE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: tg.initData })
+    });
+
+    const result = await response.json();
+
+    if (result.is_admin === true) {
+      openAdminPanel();
+    } else {
+      showToast('Доступ обмежено. Ви не є адміністратором.');
+    }
+  } catch (error) {
+    console.error(error);
+    showToast('Помилка сервера авторизації.');
   }
 }
 
@@ -614,8 +624,8 @@ async function saveProductForm() {
 }
 
 /* ===== INIT ===== */
-const tgApp = window.Telegram?.WebApp;
-if (tgApp) { tgApp.expand(); tgApp.setHeaderColor('#0F0E0C'); tgApp.setBackgroundColor('#0F0E0C'); }
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); tg.setHeaderColor('#0F0E0C'); tg.setBackgroundColor('#0F0E0C'); }
 
 renderCats();
 loadProducts();
