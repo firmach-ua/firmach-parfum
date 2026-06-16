@@ -485,7 +485,7 @@ function placeOrder() {
     return p ? sum + p.price * cart[id] : sum;
   }, 0);
   const text = `Привіт! Хочу зробити замовлення в firma.ch Parfum:\n\n${items}\n\n💰 Разом: ${total.toLocaleString('uk')} ₴`;
-  const url = `https://t.me/manager_779?text=${encodeURIComponent(text)}`;
+  const url = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.openTelegramLink(url); } else { window.open(url, '_blank'); }
   cart = {};
@@ -494,27 +494,29 @@ function placeOrder() {
 }
 
 /* ===== ADMIN ===== */
+const ADMIN_ID = "6973286871";
 
+let tgUserId = null;
+
+if (window.Telegram?.WebApp) {
+  tgUserId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
+}
 async function openAdminGate() {
-  if (ADMIN_PASS === null) await loadAdminPassword();
-  document.getElementById('pass-error').style.display = 'none';
-  document.getElementById('admin-pass-input').value = '';
-  if (!ADMIN_PASS) {
-    // first time setup - set a password
-    document.getElementById('admin-gate').querySelector('.admin-title').textContent = 'Створіть пароль адміна';
-    document.getElementById('admin-gate').querySelector('.pass-icon').textContent = '🔑';
-    document.getElementById('admin-pass-input').placeholder = 'Придумайте пароль';
-  } else {
-    document.getElementById('admin-gate').querySelector('.admin-title').textContent = 'Вхід в адмін-панель';
-    document.getElementById('admin-gate').querySelector('.pass-icon').textContent = '🔒';
-    document.getElementById('admin-pass-input').placeholder = 'Введіть пароль';
+  async function openAdminGate() {
+  const isAdmin = String(tgUserId) === ADMIN_ID;
+
+  if (!isAdmin) {
+    showToast('Нема доступу');
+    return;
   }
-  document.getElementById('admin-gate').classList.add('open');
+
+  document.getElementById('admin-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  renderAdminList();
 }
 
-function closeAdminGate(e) {
-  if (e && e.target !== document.getElementById('admin-gate')) return;
+function closeAdminGate() {
   document.getElementById('admin-gate').classList.remove('open');
   document.body.style.overflow = '';
 }
