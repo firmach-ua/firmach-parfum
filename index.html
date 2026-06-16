@@ -444,21 +444,26 @@ function placeOrder() {
     if (!p) return '';
     return `• ${p.brand} ${p.name} (${p.volume || ''}) x${cart[id]} — ${(p.price * cart[id]).toLocaleString('uk')} ₴`;
   }).filter(Boolean).join('\n');
+  
   const total = Object.keys(cart).reduce((sum,id) => {
     const p = PRODUCTS.find(x => x.id === id);
     return p ? sum + p.price * cart[id] : sum;
   }, 0);
   
   const text = `Привіт! Хочу зробити замовлення в firma.ch Parfum:\n\n${items}\n\n💰 Разом: ${total.toLocaleString('uk')} ₴`;
-  const url = `tg://user?id=${MY_TELEGRAM_ID}&text=${encodeURIComponent(text)}`;
+  
+  // Посилання на твій юзернейм, яке спрацює у всіх користувачів
+  const url = `https://t.me/manager_779?text=${encodeURIComponent(text)}`;
   
   const tg = window.Telegram?.WebApp;
   if (tg) { 
-    tg.openTelegramLink(url); 
+    // Офіційний метод Mini App для переходу за посиланнями
+    tg.openLink(url); 
   } else { 
-    window.open(`https://t.me/user?id=${MY_TELEGRAM_ID}`, '_blank'); 
+    window.open(url, '_blank'); 
   }
   
+  // Очищення кошика після натискання
   cart = {};
   updateCartBadge();
   closeCart();
