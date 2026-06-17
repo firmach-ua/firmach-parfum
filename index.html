@@ -312,9 +312,31 @@ async function loadProducts() {
 
 async function saveProducts() {
   try {
-    await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
+    // 1. Спочатку пробуємо зберегти у внутрішнє сховище Telegram
+    if (window.storage && typeof window.storage.set === 'function') {
+      await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
+    }
+    
+    // 2. Відправка товарів у ваш Cloudflare Worker, щоб вони не зникали
+    const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save_products',
+        products: PRODUCTS
+      })
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      showToast('Товари успішно збережено в базі даних!');
+    } else {
+      showToast('Сервер повернув помилку при збереженні.');
+    }
+
   } catch (e) {
-    showToast('Помилка збереження. Спробуйте ще раз.');
+    console.error(e);
+    showToast('Помилка з\'єднання з сервером. Спробуйте ще раз.');
   }
 }
 
