@@ -12,15 +12,13 @@
       --text: #ffffff;
       --text-muted: #aaaaaa;
       --accent: #e91e63;
-      --accent-hover: #c2185b;
       --border: #2c2c2c;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
     }
     header {
       padding: 15px;
@@ -30,200 +28,55 @@
       align-items: center;
       background: var(--card-bg);
     }
-    .logo {
-      font-weight: bold;
-      font-size: 1.2rem;
-      color: var(--accent);
-    }
-    .search-box {
-      padding: 10px 15px;
-    }
+    .logo { font-weight: bold; font-size: 1.2rem; color: var(--accent); }
+    .search-box { padding: 10px 15px; }
     .search-box input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text);
-      box-sizing: border-box;
+      width: 100%; padding: 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card-bg);
+      color: var(--text); box-sizing: border-box;
     }
-    .cats {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 5px 15px 15px 15px;
-    }
+    .cats { display: flex; gap: 10px; overflow-x: auto; padding: 5px 15px 15px 15px; }
     .cat-chip {
-      background: var(--card-bg);
-      padding: 8px 16px;
-      border-radius: 20px;
-      white-space: nowrap;
-      font-size: 0.9rem;
-      border: 1px solid var(--border);
-      cursor: pointer;
+      background: var(--card-bg); padding: 8px 16px; border-radius: 20px;
+      white-space: nowrap; font-size: 0.9rem; border: 1px solid var(--border); cursor: pointer;
     }
-    .cat-chip.active {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding: 15px;
-    }
+    .cat-chip.active { background: var(--accent); border-color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
     .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
+      overflow: hidden; display: flex; flex-direction: column; cursor: pointer;
     }
-    .card-img {
-      height: 140px;
-      background: #252525;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-    }
-    .card-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .card-body {
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-    }
-    .card-brand {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .card-name {
-      font-size: 0.95rem;
-      font-weight: 500;
-      margin: 4px 0 8px 0;
-      line-height: 1.2;
-      flex-grow: 1;
-    }
-    .card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .card-price {
-      font-weight: bold;
-      color: var(--text);
-    }
+    .card-img { height: 140px; background: #252525; display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-body { padding: 10px; display: flex; flex-direction: column; flex-grow: 1; }
+    .card-brand { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .card-name { font-size: 0.95rem; font-weight: 500; margin: 4px 0 8px 0; flex-grow: 1; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; }
+    .card-price { font-weight: bold; }
     .add-btn {
-      background: var(--accent);
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      cursor: pointer;
+      background: var(--accent); border: none; width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;
     }
-    .add-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-    }
-    .admin-panel {
-      padding: 15px;
-      background: #1e1518;
-      border-bottom: 1px solid var(--accent);
-    }
-    .admin-btn-main {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
-      width: 100%;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+    .add-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .admin-panel { padding: 15px; background: #1e1518; border-bottom: 1px solid var(--accent); }
+    .admin-btn-main { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; width: 100%; font-weight: bold; }
     .modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
     }
-    .modal-content {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 400px;
-      box-sizing: border-box;
-    }
-    .form-group {
-      margin-bottom: 12px;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      padding: 8px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: white;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-    .btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; box-sizing: border-box; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 8px; background: var(--bg); border: 1px solid var(--border); color: white; border-radius: 6px; box-sizing: border-box; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-secondary { background: #333; color: white; }
-    .empty {
-      text-align: center;
-      padding: 40px var(--text-muted);
-    }
-    .empty .emoji { font-size: 3rem; margin-bottom: 10px; }
+    .empty { text-align: center; padding: 40px; color: var(--text-muted); }
     #toast {
-      position: fixed;
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(233,30,99,0.95);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      z-index: 2000;
-      display: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(233,30,99,0.95); color: white; padding: 10px 20px;
+      border-radius: 20px; font-size: 0.9rem; z-index: 2000; display: none;
     }
   </style>
 </head>
@@ -281,11 +134,11 @@
   <div id="toast"></div>
 
   <script>
+    const ADMIN_ID = 6973286871; // Твій точний Telegram ID
     const PRODUCTS_KEY = 'ms_products_db_v1';
     const SEED_PRODUCTS = [
       { id: '1', brand: 'Chanel', name: 'Bleu de Chanel', category: 'Чоловічі', price: 4500, photo: '' },
-      { id: '2', brand: 'Dior', name: 'Sauvage', category: 'Чоловічі', price: 4200, photo: '' },
-      { id: '3', brand: 'Zarkoperfume', name: 'Pink Molecule 090.09', category: 'Унісекс', price: 3800, photo: '' }
+      { id: '2', brand: 'Dior', name: 'Sauvage', category: 'Чоловічі', price: 4200, photo: '' }
     ];
     const CATEGORIES = ['Всі', 'Жіночі', 'Чоловічі', 'Унісекс'];
     
@@ -294,14 +147,10 @@
     let searchQuery = '';
     let editingProductId = null;
 
-    // Перехідник хмари Telegram
-    window.storage = window.Telegram?.WebApp?.CloudStorage;
-
     function showToast(msg) {
       const t = document.getElementById('toast');
       if(t) {
-        t.innerText = msg;
-        t.style.display = 'block';
+        t.innerText = msg; t.style.display = 'block';
         setTimeout(() => { t.style.display = 'none'; }, 3000);
       }
     }
@@ -310,32 +159,37 @@
       window.Telegram?.WebApp?.ready();
       window.Telegram?.WebApp?.expand();
       
-      // Авторизація адміна (Фронтенд завжди покаже адмінку для твого спокою)
-      document.getElementById('admin-panel').style.display = 'block';
+      // Перевірка на адміна ПЕРЕД відображенням панелі
+      const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      if (user && Number(user.id) === ADMIN_ID) {
+        document.getElementById('admin-panel').style.display = 'block';
+      } else {
+        document.getElementById('admin-panel').style.display = 'none';
+      }
       
       await loadProducts();
     }
 
-  async function loadProducts() {
-  try {
-    // Тимчасово повністю вимикаємо запит до сервера при старті, щоб нічого не зависало
-    PRODUCTS = SEED_PRODUCTS;
-    console.log("Стартові товари успішно завантажено локально.");
-  } catch (e) {
-    console.error(e);
-    PRODUCTS = SEED_PRODUCTS;
-  }
-  
-  // Примусово запускаємо відображення вітрини
-  renderCats();
-  renderGrid();
-}
+    async function loadProducts() {
+      try {
+        const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/?action=get_products');
+        const cloudProducts = await response.json();
+        
+        if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+          PRODUCTS = cloudProducts;
+        } else {
+          PRODUCTS = SEED_PRODUCTS;
+        }
+      } catch (e) {
+        console.error("Помилка завантаження, вмикаємо локальні товари:", e);
+        PRODUCTS = SEED_PRODUCTS;
+      }
+      renderCats();
+      renderGrid();
+    }
+
     async function saveProducts() {
       try {
-        if (window.storage && typeof window.storage.set === 'function') {
-          try { await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true); } catch(e){}
-        }
-        
         const initData = window.Telegram?.WebApp?.initData || "";
 
         const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/', {
@@ -350,13 +204,13 @@
 
         const result = await response.json();
         if (result.success) {
-          showToast('Товари успішно збережено в базі Cloudflare KV!');
+          showToast('Товари успішно синхронізовано з Cloudflare!');
         } else {
-          showToast('Товари збережено локально.');
+          showToast('Збережено локально.');
         }
       } catch (e) {
         console.error(e);
-        showToast('Збережено в пам\'ять додатка.');
+        showToast('Помилка мережі. Збережено в пам\'ять.');
       }
     }
 
@@ -371,9 +225,7 @@
 
     function renderCats() {
       const el = document.getElementById('cats');
-      if(el) {
-        el.innerHTML = CATEGORIES.map(c => `<div class="cat-chip ${c===activeCategory?'active':''}" onclick="selectCat('${c}')">${c}</div>`).join('');
-      }
+      if(el) { el.innerHTML = CATEGORIES.map(c => `<div class="cat-chip ${c===activeCategory?'active':''}" onclick="selectCat('${c}')">${c}</div>`).join(''); }
     }
 
     function selectCat(c) { activeCategory = c; renderCats(); renderGrid(); }
@@ -389,7 +241,7 @@
       const el = document.getElementById('grid');
       if (!el) return;
       if (!products.length) {
-        el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="emoji">🔍</div>Нічого не знайдено</div>`;
+        el.innerHTML = `<div class="empty" style="grid-column:1/-1">Нічого не знайдено</div>`;
         return;
       }
       el.innerHTML = products.map(p => `
@@ -400,7 +252,7 @@
             <div class="card-name">${p.name}</div>
             <div class="card-meta">
               <div class="card-price">${p.price.toLocaleString('uk')} ₴</div>
-              <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')">
+              <button class="add-btn" onclick="event.stopPropagation(); showToast('Додано в кошик')">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
             </div>
@@ -421,6 +273,10 @@
     }
 
     function openProduct(id) {
+      // Перевірка: редагувати може ТІЛЬКИ адмін
+      const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      if (!user || Number(user.id) !== ADMIN_ID) return;
+
       const p = PRODUCTS.find(item => item.id === id);
       if(!p) return;
       editingProductId = id;
@@ -433,9 +289,7 @@
       document.getElementById('product-modal').style.display = 'flex';
     }
 
-    function closeModal() {
-      document.getElementById('product-modal').style.display = 'none';
-    }
+    function closeModal() { document.getElementById('product-modal').style.display = 'none'; }
 
     async function saveProductForm() {
       const brand = document.getElementById('p-brand').value.trim();
@@ -444,26 +298,13 @@
       const price = parseFloat(document.getElementById('p-price').value) || 0;
       const photo = document.getElementById('p-photo').value.trim();
 
-      if(!brand || !name) {
-        alert('Заповніть бренд та назву!');
-        return;
-      }
+      if(!brand || !name) { alert('Заповніть бренд та назву!'); return; }
 
       if (editingProductId) {
         const p = PRODUCTS.find(item => item.id === editingProductId);
-        if(p) {
-          p.brand = brand;
-          p.name = name;
-          p.category = category;
-          p.price = price;
-          p.photo = photo;
-        }
+        if(p) { Object.assign(p, { brand, name, category, price, photo }); }
       } else {
-        const newP = {
-          id: Date.now().toString(),
-          brand, name, category, price, photo
-        };
-        PRODUCTS.push(newP);
+        PRODUCTS.push({ id: Date.now().toString(), brand, name, category, price, photo });
       }
 
       closeModal();
@@ -471,11 +312,8 @@
       await saveProducts();
     }
 
-    function addToCart(id) {
-      showToast('Товар додано в кошик (тест)');
-    }
-
     window.onload = initApp;
   </script>
 </body>
 </html>
+   
