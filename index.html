@@ -208,5 +208,278 @@
     .btn-primary { background: var(--accent); color: white; }
     .btn-secondary { background: #333; color: white; }
     .empty {
-      text-align: center
+      text-align: center;
+      padding: 40px var(--text-muted);
+    }
+    .empty .emoji { font-size: 3rem; margin-bottom: 10px; }
+    #toast {
+      position: fixed;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(233,30,99,0.95);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
 
+  <div id="admin-panel" class="admin-panel" style="display: none;">
+    <button class="admin-btn-main" onclick="openAddModal()">➕ Додати новий товар</button>
+  </div>
+
+  <header>
+    <div class="logo">MS Market</div>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="Пошук парфумів..." oninput="filterProducts()">
+  </div>
+
+  <div id="cats" class="cats"></div>
+  <div id="grid" class="grid"></div>
+
+  <div id="product-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-title">Товар</h3>
+      <div class="form-group">
+        <label>Бренд</label>
+        <input type="text" id="p-brand">
+      </div>
+      <div class="form-group">
+        <label>Назва</label>
+        <input type="text" id="p-name">
+      </div>
+      <div class="form-group">
+        <label>Категорія</label>
+        <select id="p-cat">
+          <option value="Жіночі">Жіночі</option>
+          <option value="Чоловічі">Чоловічі</option>
+          <option value="Унісекс">Унісекс</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ціна (₴)</label>
+        <input type="number" id="p-price">
+      </div>
+      <div class="form-group">
+        <label>Посилання на фото URL</label>
+        <input type="text" id="p-photo" placeholder="https://...">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Скасувати</button>
+        <button class="btn btn-primary" onclick="saveProductForm()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const PRODUCTS_KEY = 'ms_products_db_v1';
+    const SEED_PRODUCTS = [
+      { id: '1', brand: 'Chanel', name: 'Bleu de Chanel', category: 'Чоловічі', price: 4500, photo: '' },
+      { id: '2', brand: 'Dior', name: 'Sauvage', category: 'Чоловічі', price: 4200, photo: '' },
+      { id: '3', brand: 'Zarkoperfume', name: 'Pink Molecule 090.09', category: 'Унісекс', price: 3800, photo: '' }
+    ];
+    const CATEGORIES = ['Всі', 'Жіночі', 'Чоловічі', 'Унісекс'];
+    
+    let PRODUCTS = [];
+    let activeCategory = 'Всі';
+    let searchQuery = '';
+    let editingProductId = null;
+
+    // Перехідник хмари Telegram
+    window.storage = window.Telegram?.WebApp?.CloudStorage;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if(t) {
+        t.innerText = msg;
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+      }
+    }
+
+    async function initApp() {
+      window.Telegram?.WebApp?.ready();
+      window.Telegram?.WebApp?.expand();
+      
+      // Авторизація адміна (Фронтенд завжди покаже адмінку для твого спокою)
+      document.getElementById('admin-panel').style.display = 'block';
+      
+      await loadProducts();
+    }
+
+    async function loadProducts() {
+      try {
+        const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/?action=get_products');
+        const cloudProducts = await response.json();
+        
+        if (cloudProducts && cloudProducts.length > 0) {
+          PRODUCTS = cloudProducts;
+        } else {
+          PRODUCTS = SEED_PRODUCTS;
+        }
+      } catch (e) {
+        console.error("Помилка Cloudflare, завантажуємо локальні:", e);
+        PRODUCTS = SEED_PRODUCTS;
+      }
+      renderCats();
+      renderGrid();
+    }
+
+    async function saveProducts() {
+      try {
+        if (window.storage && typeof window.storage.set === 'function') {
+          try { await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true); } catch(e){}
+        }
+        
+        const initData = window.Telegram?.WebApp?.initData || "";
+
+        const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            initData: initData,
+            action: 'save_products',
+            products: PRODUCTS
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showToast('Товари успішно збережено в базі Cloudflare KV!');
+        } else {
+          showToast('Товари збережено локально.');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Збережено в пам\'ять додатка.');
+      }
+    }
+
+    function getFiltered() {
+      return PRODUCTS.filter(p => {
+        const matchCat = activeCategory === 'Всі' || p.category === activeCategory;
+        const q = searchQuery.toLowerCase();
+        const matchSearch = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+    }
+
+    function renderCats() {
+      const el = document.getElementById('cats');
+      if(el) {
+        el.innerHTML = CATEGORIES.map(c => `<div class="cat-chip ${c===activeCategory?'active':''}" onclick="selectCat('${c}')">${c}</div>`).join('');
+      }
+    }
+
+    function selectCat(c) { activeCategory = c; renderCats(); renderGrid(); }
+    function filterProducts() { searchQuery = document.getElementById('search-input').value; renderGrid(); }
+
+    function productImgTag(p) {
+      if (p.photo) return `<img src="${p.photo}" alt="">`;
+      return '🌸';
+    }
+
+    function renderGrid() {
+      const products = getFiltered();
+      const el = document.getElementById('grid');
+      if (!el) return;
+      if (!products.length) {
+        el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="emoji">🔍</div>Нічого не знайдено</div>`;
+        return;
+      }
+      el.innerHTML = products.map(p => `
+        <div class="card" onclick="openProduct('${p.id}')">
+          <div class="card-img">${productImgTag(p)}</div>
+          <div class="card-body">
+            <div class="card-brand">${p.brand}</div>
+            <div class="card-name">${p.name}</div>
+            <div class="card-meta">
+              <div class="card-price">${p.price.toLocaleString('uk')} ₴</div>
+              <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddModal() {
+      editingProductId = null;
+      document.getElementById('modal-title').innerText = 'Додати товар';
+      document.getElementById('p-brand').value = '';
+      document.getElementById('p-name').value = '';
+      document.getElementById('p-cat').value = 'Жіночі';
+      document.getElementById('p-price').value = '';
+      document.getElementById('p-photo').value = '';
+      document.getElementById('product-modal').style.display = 'flex';
+    }
+
+    function openProduct(id) {
+      const p = PRODUCTS.find(item => item.id === id);
+      if(!p) return;
+      editingProductId = id;
+      document.getElementById('modal-title').innerText = 'Редагувати товар';
+      document.getElementById('p-brand').value = p.brand;
+      document.getElementById('p-name').value = p.name;
+      document.getElementById('p-cat').value = p.category;
+      document.getElementById('p-price').value = p.price;
+      document.getElementById('p-photo').value = p.photo || '';
+      document.getElementById('product-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('product-modal').style.display = 'none';
+    }
+
+    async function saveProductForm() {
+      const brand = document.getElementById('p-brand').value.trim();
+      const name = document.getElementById('p-name').value.trim();
+      const category = document.getElementById('p-cat').value;
+      const price = parseFloat(document.getElementById('p-price').value) || 0;
+      const photo = document.getElementById('p-photo').value.trim();
+
+      if(!brand || !name) {
+        alert('Заповніть бренд та назву!');
+        return;
+      }
+
+      if (editingProductId) {
+        const p = PRODUCTS.find(item => item.id === editingProductId);
+        if(p) {
+          p.brand = brand;
+          p.name = name;
+          p.category = category;
+          p.price = price;
+          p.photo = photo;
+        }
+      } else {
+        const newP = {
+          id: Date.now().toString(),
+          brand, name, category, price, photo
+        };
+        PRODUCTS.push(newP);
+      }
+
+      closeModal();
+      renderGrid();
+      await saveProducts();
+    }
+
+    function addToCart(id) {
+      showToast('Товар додано в кошик (тест)');
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
