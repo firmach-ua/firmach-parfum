@@ -316,33 +316,20 @@
       await loadProducts();
     }
 
-   async function loadProducts() {
-      // Створюємо таймер: якщо сервер не відповість за 3 секунди — скасовуємо запит
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      try {
-        const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/?action=get_products', {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId); // Сервер відповів вчасно, прибираємо таймер
-        
-        const cloudProducts = await response.json();
-        if (cloudProducts && cloudProducts.length > 0) {
-          PRODUCTS = cloudProducts;
-        } else {
-          PRODUCTS = SEED_PRODUCTS;
-        }
-      } catch (e) {
-        clearTimeout(timeoutId);
-        console.error("Cloudflare не відповів або помилка. Завантажуємо стандартні товари:", e);
-        PRODUCTS = SEED_PRODUCTS; // Якщо сервер лежить — примусово показуємо стартовий асортимент
-      }
-      
-      // Ці дві функції ЗАЛІЗОБЕТОННО увімкнуть інтерфейс і приберуть чорний екран
-      renderCats();
-      renderGrid();
-    }
+  async function loadProducts() {
+  try {
+    // Тимчасово повністю вимикаємо запит до сервера при старті, щоб нічого не зависало
+    PRODUCTS = SEED_PRODUCTS;
+    console.log("Стартові товари успішно завантажено локально.");
+  } catch (e) {
+    console.error(e);
+    PRODUCTS = SEED_PRODUCTS;
+  }
+  
+  // Примусово запускаємо відображення вітрини
+  renderCats();
+  renderGrid();
+}
     async function saveProducts() {
       try {
         if (window.storage && typeof window.storage.set === 'function') {
