@@ -281,7 +281,7 @@ let cart = {};
 let currentProduct = null;
 let editingProductId = null;
 let pendingPhotoData = null;
-
+window.storage = window.Telegram?.WebApp?.CloudStorage;
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
