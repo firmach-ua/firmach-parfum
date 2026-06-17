@@ -312,20 +312,42 @@ async function loadProducts() {
 
 async function saveProducts() {
   try {
-    // 1. Спочатку пробуємо зберегти у внутрішнє сховище Telegram
+    // 1. Локальне збереження у хмару Telegram (як і було)
     if (window.storage && typeof window.storage.set === 'function') {
       await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
     }
     
-    // 2. Відправка товарів у ваш Cloudflare Worker, щоб вони не зникали
+    // Отримуємо initData для авторизації (якщо вона є)
+    const initData = window.Telegram?.WebApp?.initData || "";
+
+    // 2. РЕАЛЬНА ВІДПРАВКА НА CLOUDFLARE WORKER
     const response = await fetch('https://mute-waterfall-78ec.msmarketua.workers.dev/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
       body: JSON.stringify({
+        initData: initData,
         action: 'save_products',
         products: PRODUCTS
       })
     });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Товари успішно збережено в базі Cloudflare KV!');
+    } else if (result.error) {
+      showToast('Помилка сервера: ' + result.error);
+    } else {
+      showToast('Товари збережено (дефолтний статус).');
+    }
+
+  } catch (e) {
+    console.error("Помилка відправки на Cloudflare:", e);
+    showToast('Помилка з\'єднання з Cloudflare. Але локально збережено.');
+  }
+}
 
     const result = await response.json();
     if (result.success) {
