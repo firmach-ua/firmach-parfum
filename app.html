@@ -121,10 +121,6 @@
   .field-input, .field-textarea, .field-select { width: 100%; background: var(--bg3); border: 0.5px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 15px; color: var(--text); outline: none; margin-bottom: 14px; font-family: inherit; }
   .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--gold); }
   .field-textarea { resize: vertical; min-height: 70px; }
-  .photo-upload { border: 1.5px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; margin-bottom: 14px; position: relative; overflow: hidden; }
-  .photo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .photo-preview { width: 100%; max-height: 160px; object-fit: contain; border-radius: 8px; margin-bottom: 8px; display: none; }
-  .photo-upload-text { font-size: 13px; color: var(--text-muted); }
   .admin-save-btn { width: 100%; background: var(--gold); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; color: #0F0E0C; cursor: pointer; margin-top: 4px; }
   .admin-list-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
   .admin-list-img { width: 44px; height: 44px; border-radius: 8px; background: var(--bg3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
@@ -137,9 +133,6 @@
   .mini-btn svg { width: 15px; height: 15px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; }
   .mini-btn.danger svg { stroke: var(--danger); }
   .add-new-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--bg3); border: 1.5px dashed var(--border); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; color: var(--gold); cursor: pointer; margin-top: 14px; }
-  .admin-tabs { display: flex; gap: 8px; padding: 14px 20px 0; }
-  .admin-tab { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--bg3); border: 0.5px solid var(--border); color: var(--text-muted); cursor: pointer; }
-  .admin-tab.active { background: var(--gold); border-color: var(--gold); color: #0F0E0C; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 0.5px solid var(--gold); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
   .toast.show { opacity: 1; }
 </style>
@@ -236,12 +229,8 @@
       </div>
     </div>
     <div class="admin-body">
-      <label class="field-label">Фото товару</label>
-      <div class="photo-upload" id="photo-upload-zone">
-        <img id="photo-preview" class="photo-preview" />
-        <div class="photo-upload-text" id="photo-upload-text">📷 Натисніть, щоб завантажити фото</div>
-        <input type="file" accept="image/*" id="photo-input" onchange="handlePhotoUpload(event)" />
-      </div>
+      <label class="field-label">Посилання на фото товару</label>
+      <input class="field-input" type="text" id="edit-product-image" placeholder="https://example.com/photo.jpg">
 
       <label class="field-label">Бренд</label>
       <input class="field-input" id="f-brand" placeholder="Наприклад: Chanel" />
@@ -280,7 +269,6 @@ let searchQuery = '';
 let cart = {};
 let currentProduct = null;
 let editingProductId = null;
-let pendingPhotoData = null;
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -292,34 +280,29 @@ function showToast(msg) {
 function uid() { return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
 
 const SEED_PRODUCTS = [
-  { id:'p1', brand:'Chanel', name:'N°5 Eau de Parfum', photo:null, price:3200, volume:'50 мл', category:'Жіночі', notes:'Альдегіди, троянда, жасмин, іланг-іланг, сандал, цивет. Легендарний аромат 1921 року.' },
-  { id:'p2', brand:'Dior', name:'Sauvage EDT', photo:null, price:2900, volume:'100 мл', category:'Чоловічі', notes:'Калабрійський бергамот, перець Сечуань, лаванда, амбрина, кедр. Свіжий і потужний.' },
-  { id:'p3', brand:'Guerlain', name:'Mon Guerlain', photo:null, price:2400, volume:'50 мл', category:'Жіночі', notes:'Лаванда з Прованса, ваніль, сандал, кумарин. Солодко-квіткова мрія.' },
-  { id:'p4', brand:'Creed', name:'Aventus', photo:null, price:8900, volume:'50 мл', category:'Чоловічі', notes:'Ананас, береза, мускус, дубовий мох, ваніль. Культовий аромат успіху.' },
+  { id:'p1', brand:'Chanel', name:'N°5 Eau de Parfum', photo:'', price:3200, volume:'50 мл', category:'Жіночі', notes:'Альдегіди, троянда, жасмин, іланг-іланг, сандал, цивет. Легендарний аромат 1921 року.' },
+  { id:'p2', brand:'Dior', name:'Sauvage EDT', photo:'', price:2900, volume:'100 мл', category:'Чоловічі', notes:'Калабрійський бергамот, перець Сечуань, лаванда, амбрина, кедр. Свіжий і потужний.' },
+  { id:'p3', brand:'Guerlain', name:'Mon Guerlain', photo:'', price:2400, volume:'50 мл', category:'Жіночі', notes:'Лаванда з Прованса, ваніль, сандал, кумарин. Солодко-квіткова мрія.' },
+  { id:'p4', brand:'Creed', name:'Aventus', photo:'', price:8900, volume:'50 мл', category:'Чоловічі', notes:'Ананас, береза, мускус, дубовий мох, ваніль. Культовий аромат успіху.' },
 ];
 
 async function loadProducts() {
   try {
-    // 1. Намагаємося завантажити найсвіжіші товари з Cloudflare KV
     const response = await fetch(`${CLOUDFLARE_URL}?action=get_products`);
-    
     if (response.ok) {
       const cloudProducts = await response.json();
-      // Якщо в базі Cloudflare є товари і цей масив не порожній
       if (cloudProducts && cloudProducts.length > 0) {
         PRODUCTS = cloudProducts;
-        // Оновлюємо локальну пам'ять телефону свіжими даними з хмари
         try { await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true); } catch(e) {}
         renderCats();
         renderGrid();
-        return; // Виходимо з функції, бо дані успішно завантажені з хмари
+        return;
       }
     }
   } catch (cloudflareError) {
     console.error('Не вдалося завантажити з Cloudflare, пробуємо локальну памʼять:', cloudflareError);
   }
 
-  // 2. Якщо хмара недоступна або порожня, беремо дані з пам'яті телефону
   try {
     const result = await window.storage.get(PRODUCTS_KEY, true);
     if (result && result.value) {
@@ -338,13 +321,9 @@ async function loadProducts() {
 
 async function saveProducts() {
   try {
-    // 1. Спочатку зберігаємо локально, щоб інтерфейс оновився
     await window.storage.set(PRODUCTS_KEY, JSON.stringify(PRODUCTS), true);
-    
-    // 2. Готуємо дані безпеки Telegram для Cloudflare
     const initData = window.Telegram?.WebApp?.initData || "";
     
-    // 3. Відправляємо запит у твою хмарну базу Cloudflare KV
     const response = await fetch(`${CLOUDFLARE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -389,8 +368,8 @@ function renderCats() {
 function selectCat(c) { activeCategory = c; renderCats(); renderGrid(); }
 function filterProducts() { searchQuery = document.getElementById('search-input').value; renderGrid(); }
 
-function productImgTag(p, size) {
-  if (p.photo) return `<img src="${p.photo}" alt="">`;
+function productImgTag(p) {
+  if (p.photo && p.photo.trim() !== "") return `<img src="${p.photo}" alt="">`;
   return '🌸';
 }
 
@@ -528,7 +507,7 @@ async function openAdminGate() {
     const response = await fetch(CLOUDFLARE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: tg.initData })
+      body: JSON.stringify({ initData: tg.initData, action: 'check_admin' })
     });
 
     const result = await response.json();
@@ -593,96 +572,83 @@ async function deleteProduct(id) {
 
 function openProductForm(id) {
   editingProductId = id;
-  pendingPhotoData = null;
   const isEdit = !!id;
   document.getElementById('form-title').textContent = isEdit ? 'Редагувати товар' : 'Новий товар';
   const p = isEdit ? PRODUCTS.find(x => x.id === id) : null;
+  
+  document.getElementById('edit-product-image').value = p?.photo || '';
   document.getElementById('f-brand').value = p?.brand || '';
   document.getElementById('f-name').value = p?.name || '';
   document.getElementById('f-category').value = p?.category || 'Жіночі';
   document.getElementById('f-volume').value = p?.volume || '';
   document.getElementById('f-price').value = p?.price || '';
   document.getElementById('f-notes').value = p?.notes || '';
-  const preview = document.getElementById('photo-preview');
-  const uploadText = document.getElementById('photo-upload-text');
-  if (p?.photo) {
-    preview.src = p.photo;
-    preview.style.display = 'block';
-    uploadText.textContent = 'Натисніть, щоб змінити фото';
-    pendingPhotoData = p.photo;
-  } else {
-    preview.style.display = 'none';
-    uploadText.textContent = '📷 Натисніть, щоб завантажити фото';
-  }
+  
   document.getElementById('product-form-modal').classList.add('open');
 }
 
-function closeProductForm() { document.getElementById('product-form-modal').classList.remove('open'); }
-function closeProductFormOverlay(e) { if (e.target === document.getElementById('product-form-modal')) closeProductForm(); }
+function closeProductForm() { 
+  document.getElementById('product-form-modal').classList.remove('open'); 
+}
 
-function handlePhotoUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      const maxDim = 700;
-      let w = img.width, h = img.height;
-      if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
-      else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.78);
-      pendingPhotoData = compressed;
-      const preview = document.getElementById('photo-preview');
-      preview.src = compressed;
-      preview.style.display = 'block';
-      document.getElementById('photo-upload-text').textContent = 'Натисніть, щоб змінити фото';
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+function closeProductFormOverlay(e) { 
+  if (e.target.classList.contains('admin-modal')) closeProductForm(); 
 }
 
 async function saveProductForm() {
+  const photoUrl = document.getElementById('edit-product-image').value.trim();
   const brand = document.getElementById('f-brand').value.trim();
   const name = document.getElementById('f-name').value.trim();
-  const price = parseFloat(document.getElementById('f-price').value);
+  const category = document.getElementById('f-category').value;
+  const volume = document.getElementById('f-volume').value.trim();
+  const price = parseFloat(document.getElementById('f-price').value) || 0;
+  const notes = document.getElementById('f-notes').value.trim();
+
   if (!brand || !name || !price) {
-    showToast('Заповніть бренд, назву і ціну');
+    showToast('Будь ласка, заповніть обовʼязкові поля (Бренд, Назва, Ціна)');
     return;
   }
-  const data = {
-    brand, name,
-    category: document.getElementById('f-category').value,
-    volume: document.getElementById('f-volume').value.trim(),
-    price,
-    notes: document.getElementById('f-notes').value.trim(),
-    photo: pendingPhotoData
-  };
+
   if (editingProductId) {
-    const idx = PRODUCTS.findIndex(p => p.id === editingProductId);
-    if (idx > -1) PRODUCTS[idx] = { ...PRODUCTS[idx], ...data };
+    // Редагування існуючого товару
+    const p = PRODUCTS.find(x => x.id === editingProductId);
+    if (p) {
+      p.photo = photoUrl;
+      p.brand = brand;
+      p.name = name;
+      p.category = category;
+      p.volume = volume;
+      p.price = price;
+      p.notes = notes;
+    }
   } else {
-    PRODUCTS.push({ id: uid(), ...data });
+    // Створення нового товару
+    const newProd = {
+      id: uid(),
+      photo: photoUrl,
+      brand: brand,
+      name: name,
+      category: category,
+      volume: volume,
+      price: price,
+      notes: notes
+    };
+    PRODUCTS.push(newProd);
   }
-  await saveProducts();
+
   closeProductForm();
+  showToast('Зберігаємо у хмару...');
+  
+  await saveProducts();
+  
   renderAdminList();
   renderGrid();
-  showToast('Збережено');
 }
 
-/* ===== INIT ===== */
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.expand(); tg.setHeaderColor('#0F0E0C'); tg.setBackgroundColor('#0F0E0C'); }
-
-renderCats();
-loadProducts();
+// Запуск програми при завантаженні сторінки
+window.addEventListener('DOMContentLoaded', () => {
+  loadProducts();
+});
 </script>
 </body>
 </html>
-
-}
